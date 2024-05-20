@@ -133,12 +133,18 @@ const ProductDashboard: React.FC = () => {
     setEditingProduct(new Product());
   }
 
+  const showMessageFromModal = (messageType: MessageType, content: string) => {
+    showMessage(messageApi, messageType, content);
+  }
+
   return <>
     {contextHolder}
     <ProductItem categoryList={categoryList}
       isModalOpen={isModalOpen}
       editingProduct={editingProduct}
-      onClickCloseModal={onClickCloseProductItem} />
+      onClickCloseModal={onClickCloseProductItem}
+      getProductList={getProductList} 
+      showMessage={showMessageFromModal}/>
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
       <Select
         value={categoryId}

@@ -5,15 +5,23 @@ import { Category, Product } from './Product';
 import { Form, Input, InputNumber, Modal, Select, Image, Upload, GetProp, UploadProps, UploadFile } from 'antd';
 import TextArea from 'antd/es/input/TextArea';
 import { PlusOutlined } from '@ant-design/icons';
+import { createProduct } from './api/route';
+import { MessageType } from '@/app/util/Message';
 
 interface ProductItemProps {
     categoryList: Category[],
     isModalOpen: boolean,
     editingProduct: Product,
     onClickCloseModal: () => void
+    getProductList: () => Promise<void>
+    showMessage: (messageType: MessageType, content: string) => void
 }
 
-const ProductItem: React.FC<ProductItemProps> = ({ categoryList, isModalOpen, editingProduct, onClickCloseModal }) => {
+type FileType = Parameters<GetProp<UploadProps, 'beforeUpload'>>[0];
+
+const ProductItem: React.FC<ProductItemProps> = (
+    { categoryList, isModalOpen, editingProduct, onClickCloseModal, getProductList, showMessage }
+) => {
 
     const [product, setProduct] = useState<Product>(new Product());
 
@@ -47,7 +55,20 @@ const ProductItem: React.FC<ProductItemProps> = ({ categoryList, isModalOpen, ed
     }, [isModalOpen, editingProduct, categoryList]);
 
     const onSaveProduct = () => {
-
+        const formData = new FormData();
+        fileList.forEach(file => {
+            formData.append('files', file.originFileObj as FileType);
+        })
+        formData.append('product', JSON.stringify(product));
+        createProduct(formData).then(response => {
+            if (response.success) {
+                getProductList();
+                showMessage(MessageType.SUCCESS, 'Đã lưu sản phẩm thành công');
+                onCancelModal();
+            } else {
+                console.log(response);
+            }
+        })
     }
 
     const onCancelModal = () => {
@@ -66,8 +87,6 @@ const ProductItem: React.FC<ProductItemProps> = ({ categoryList, isModalOpen, ed
     /**
      * HANDLE Upload images
      */
-
-    type FileType = Parameters<GetProp<UploadProps, 'beforeUpload'>>[0];
 
     const getBase64 = (file: FileType): Promise<string> =>
         new Promise((resolve, reject) => {
@@ -90,6 +109,13 @@ const ProductItem: React.FC<ProductItemProps> = ({ categoryList, isModalOpen, ed
         setFileList(newFileList);
     }
 
+    const handleRemoveImage = (file: UploadFile<any>) => {
+        const index = fileList.indexOf(file);
+        const newFileList = fileList.slice();
+        newFileList.splice(index, 1);
+        setFileList(newFileList);
+    }
+
     const uploadButton = (
         <button style={{ border: 0, background: 'none' }} type="button">
             <PlusOutlined />
@@ -97,98 +123,100 @@ const ProductItem: React.FC<ProductItemProps> = ({ categoryList, isModalOpen, ed
         </button>
     );
 
-    console.log(fileList);
-
     return (
-        <Modal
-            title={editingProduct.id ? 'Sản phẩm ' + editingProduct.id : 'Thêm sản phẩm'}
-            open={isModalOpen}
-            onOk={onSaveProduct}
-            centered
-            onCancel={onCancelModal}
-        >
-            <Form
-                layout="horizontal"
-                labelCol={{ span: 6 }}
-                wrapperCol={{ span: 25 }}
-                labelAlign='left'
+        <>
+            <Modal
+                title={editingProduct.id ? 'Sản phẩm ' + editingProduct.id : 'Thêm sản phẩm'}
+                open={isModalOpen}
+                onOk={onSaveProduct}
+                centered
+                onCancel={onCancelModal}
             >
-                <Form.Item label="Phân loại">
-                    <Select
-                        value={product.categoryId}
-                        style={{ width: 120 }}
-                        onSelect={(value) => {
+                <Form
+                    layout="horizontal"
+                    labelCol={{ span: 6 }}
+                    wrapperCol={{ span: 25 }}
+                    labelAlign='left'
+                >
+                    <Form.Item label="Phân loại">
+                        <Select
+                            value={product.categoryId}
+                            style={{ width: 120 }}
+                            onSelect={(value) => {
+                                setProduct(prevProduct => ({
+                                    ...prevProduct,
+                                    categoryId: value
+                                }));
+                            }}
+                            options={categoryList.map(category => ({
+                                value: category.id,
+                                label: category.name,
+                            }))}
+                        />
+                    </Form.Item>
+                    <Form.Item label="Tên sản phẩm">
+                        <Input value={product.name} onChange={(event) => {
                             setProduct(prevProduct => ({
                                 ...prevProduct,
-                                categoryId: value
+                                name: event.currentTarget.value,
+                                code: convertNameToCode(event.currentTarget.value)
                             }));
-                        }}
-                        options={categoryList.map(category => ({
-                            value: category.id,
-                            label: category.name,
-                        }))}
-                    />
-                </Form.Item>
-                <Form.Item label="Tên sản phẩm">
-                    <Input value={product.name} onChange={(event) => {
-                        setProduct(prevProduct => ({
-                            ...prevProduct,
-                            name: event.currentTarget.value,
-                            code: convertNameToCode(event.currentTarget.value)
-                        }));
-                    }} />
-                </Form.Item>
-                <Form.Item label="Mã sản phẩm">
-                    <Input disabled={true} value={product.code} />
-                </Form.Item>
-                <Form.Item label="Đơn giá">
-                    <InputNumber value={product.unitPrice} onChange={(value) => {
-                        setProduct(prevProduct => ({
-                            ...prevProduct,
-                            unitPrice: value ?? 0
-                        }));
-                    }} />
-                </Form.Item>
-                <Form.Item label="Số lượng">
-                    <InputNumber value={product.quantity} onChange={(value) => {
-                        setProduct(prevProduct => ({
-                            ...prevProduct,
-                            quantity: value ?? 0
-                        }));
-                    }} />
-                </Form.Item>
-                <Form.Item label="Mô tả sản phẩm">
-                    <TextArea rows={6} value={product.description} onChange={(event) => {
-                        setProduct(prevProduct => ({
-                            ...prevProduct,
-                            description: event.currentTarget.value
-                        }));
-                    }} />
-                </Form.Item>
-                <Form.Item label="Hình ảnh">
-                    <Upload
-                        listType="picture-card"
-                        fileList={fileList}
-                        onChange={handleChangeUpload}
-                        onPreview={handlePreviewImage}
-                    >
-                        {fileList.length >= 5 ? null : uploadButton}
-                    </Upload>
-                    {previewImage && (
-                        <Image
-                            alt=''
-                            wrapperStyle={{ display: 'none' }}
-                            preview={{
-                                visible: previewOpen,
-                                onVisibleChange: (visible) => setPreviewOpen(visible),
-                                afterOpenChange: (visible) => !visible && setPreviewImage(''),
-                            }}
-                            src={previewImage}
-                        />
-                    )}
-                </Form.Item>
-            </Form>
-        </Modal>
+                        }} />
+                    </Form.Item>
+                    <Form.Item label="Mã sản phẩm">
+                        <Input disabled={true} value={product.code} />
+                    </Form.Item>
+                    <Form.Item label="Đơn giá">
+                        <InputNumber value={product.unitPrice} onChange={(value) => {
+                            setProduct(prevProduct => ({
+                                ...prevProduct,
+                                unitPrice: value ?? 0
+                            }));
+                        }} />
+                    </Form.Item>
+                    <Form.Item label="Số lượng">
+                        <InputNumber value={product.quantity} onChange={(value) => {
+                            setProduct(prevProduct => ({
+                                ...prevProduct,
+                                quantity: value ?? 0
+                            }));
+                        }} />
+                    </Form.Item>
+                    <Form.Item label="Mô tả sản phẩm">
+                        <TextArea rows={6} value={product.description} onChange={(event) => {
+                            setProduct(prevProduct => ({
+                                ...prevProduct,
+                                description: event.currentTarget.value
+                            }));
+                        }} />
+                    </Form.Item>
+                    <Form.Item label="Hình ảnh">
+                        <Upload
+                            listType="picture-card"
+                            fileList={fileList}
+                            onChange={handleChangeUpload}
+                            onPreview={handlePreviewImage}
+                            onRemove={handleRemoveImage}
+                        >
+                            {fileList.length >= 5 ? null : uploadButton}
+                        </Upload>
+                        {previewImage && (
+                            <Image
+                                alt=''
+                                wrapperStyle={{ display: 'none' }}
+                                preview={{
+                                    visible: previewOpen,
+                                    onVisibleChange: (visible) => setPreviewOpen(visible),
+                                    afterOpenChange: (visible) => !visible && setPreviewImage(''),
+                                }}
+                                src={previewImage}
+                            />
+                        )}
+                    </Form.Item>
+                </Form>
+            </Modal>
+        </>
+
     )
 };
 

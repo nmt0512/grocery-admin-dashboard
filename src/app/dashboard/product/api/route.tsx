@@ -1,7 +1,7 @@
 const BASE_URI = 'http://localhost:8080'
 
 export async function getProductByCategoryId(categoryId: number) {
-    const response = await fetch(BASE_URI + '/api/product/category?categoryId=' + categoryId, {
+    const response = await fetch(`${BASE_URI}/api/product/category?categoryId=${categoryId}`, {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
@@ -11,7 +11,7 @@ export async function getProductByCategoryId(categoryId: number) {
 }
 
 export async function getAllCategory() {
-    const response = await fetch(BASE_URI + '/api/category/all', {
+    const response = await fetch(`${BASE_URI}/api/category/all`, {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
@@ -21,11 +21,19 @@ export async function getAllCategory() {
 }
 
 export async function deleteProductById(id: number) {
-    const response = await fetch(BASE_URI + '/api/product/' + id, {
+    const response = await fetch(`${BASE_URI}/api/product/${id}`, {
         method: 'DELETE',
         headers: {
             'Content-Type': 'application/json',
         },
+    })
+    return await response.json()
+}
+
+export async function createProduct(formData: FormData) {
+    const response = await fetch(`${BASE_URI}/api/product/create`, {
+        method: 'POST',
+        body: formData
     })
     return await response.json()
 }
