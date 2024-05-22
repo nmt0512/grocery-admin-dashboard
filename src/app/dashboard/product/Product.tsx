@@ -17,7 +17,7 @@ export class Product {
   unitPrice?: number;
   quantity?: number;
   categoryId?: number;
-  images?: string[];
+  images: string[] = [];
 }
 
 export interface Category {

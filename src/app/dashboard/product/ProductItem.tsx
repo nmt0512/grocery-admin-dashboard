@@ -5,7 +5,7 @@ import { Category, Product } from './Product';
 import { Form, Input, InputNumber, Modal, Select, Image, Upload, GetProp, UploadProps, UploadFile } from 'antd';
 import TextArea from 'antd/es/input/TextArea';
 import { PlusOutlined } from '@ant-design/icons';
-import { createProduct } from './api/route';
+import { createProduct, updateProduct } from './api/route';
 import { MessageType } from '@/app/util/Message';
 
 interface ProductItemProps {
@@ -29,12 +29,16 @@ const ProductItem: React.FC<ProductItemProps> = (
     const [previewImage, setPreviewImage] = useState<string>('');
     const [fileList, setFileList] = useState<UploadFile[]>([]);
 
+    const [isLoading, setIsLoading] = useState<boolean>(false);
+
     /**
      * HANDLE Save products
      */
 
     useEffect(() => {
-        editingProduct.categoryId = categoryList.length > 0 ? categoryList[0].id : 0
+        if (editingProduct.categoryId === undefined) {
+            editingProduct.categoryId = categoryList.length > 0 ? categoryList[0].id : 0
+        }
         setProduct(editingProduct);
         if (editingProduct.images && editingProduct.images.length > 0) {
             const currentFileList = editingProduct.images.map((imageUrl, index) => {
@@ -55,20 +59,45 @@ const ProductItem: React.FC<ProductItemProps> = (
     }, [isModalOpen, editingProduct, categoryList]);
 
     const onSaveProduct = () => {
+        setIsLoading(true);
         const formData = new FormData();
-        fileList.forEach(file => {
-            formData.append('files', file.originFileObj as FileType);
-        })
-        formData.append('product', JSON.stringify(product));
-        createProduct(formData).then(response => {
-            if (response.success) {
-                getProductList();
-                showMessage(MessageType.SUCCESS, 'Đã lưu sản phẩm thành công');
-                onCancelModal();
-            } else {
-                console.log(response);
-            }
-        })
+        if (product.id === undefined) {
+            fileList.forEach(file => {
+                formData.append('files', file.originFileObj as FileType);
+            })
+            formData.append('product', JSON.stringify(product));
+            createProduct(formData).then(response => {
+                if (response.success) {
+                    getProductList();
+                    showMessage(MessageType.SUCCESS, 'Đã lưu sản phẩm thành công');
+                    onCancelModal();
+                } else {
+                    console.log(response);
+                }
+                setIsLoading(false);
+            });
+        } else {
+            product.images = [];
+            fileList.forEach(file => {
+                if (file.url === undefined) {
+                    formData.append('files', file.originFileObj as FileType);
+                } else {
+                    product.images.push(file.url);
+                }
+            });
+            formData.append('product', JSON.stringify(product));
+            console.log(product);
+            updateProduct(formData).then(response => {
+                if (response.success) {
+                    getProductList();
+                    showMessage(MessageType.SUCCESS, 'Đã lưu sản phẩm thành công');
+                    onCancelModal();
+                } else {
+                    console.log(response);
+                }
+                setIsLoading(false);
+            });
+        }
     }
 
     const onCancelModal = () => {
@@ -124,13 +153,13 @@ const ProductItem: React.FC<ProductItemProps> = (
     );
 
     return (
-        <>
             <Modal
                 title={editingProduct.id ? 'Sản phẩm ' + editingProduct.id : 'Thêm sản phẩm'}
                 open={isModalOpen}
                 onOk={onSaveProduct}
                 centered
                 onCancel={onCancelModal}
+                confirmLoading={isLoading}
             >
                 <Form
                     layout="horizontal"
@@ -215,7 +244,6 @@ const ProductItem: React.FC<ProductItemProps> = (
                     </Form.Item>
                 </Form>
             </Modal>
-        </>
 
     )
 };

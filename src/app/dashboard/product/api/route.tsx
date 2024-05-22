@@ -37,3 +37,11 @@ export async function createProduct(formData: FormData) {
     })
     return await response.json()
 }
+
+export async function updateProduct(formData: FormData) {
+    const response = await fetch(`${BASE_URI}/api/product/update`, {
+        method: 'PUT',
+        body: formData
+    })
+    return await response.json()
+}
