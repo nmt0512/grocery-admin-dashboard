@@ -1,12 +1,12 @@
 'use client'
 
 import React, { useEffect, useState } from 'react';
-import { Category, Product } from './Product';
 import { Form, Input, InputNumber, Modal, Select, Image, Upload, GetProp, UploadProps, UploadFile } from 'antd';
 import TextArea from 'antd/es/input/TextArea';
 import { PlusOutlined } from '@ant-design/icons';
 import { createProduct, updateProduct } from './api/route';
 import { MessageType } from '@/app/util/Message';
+import { Category, Product } from '@/app/model/DashboardModel';
 
 interface ProductItemProps {
     categoryList: Category[],
@@ -32,7 +32,7 @@ const ProductItem: React.FC<ProductItemProps> = (
     const [isLoading, setIsLoading] = useState<boolean>(false);
 
     /**
-     * HANDLE Save products
+     * HANDLE Save product
      */
 
     useEffect(() => {

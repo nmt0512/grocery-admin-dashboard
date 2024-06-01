@@ -7,24 +7,7 @@ import { deleteProductById, getAllCategory, getProductByCategoryId } from './api
 import { DeleteOutlined, EditOutlined, QuestionCircleOutlined } from '@ant-design/icons';
 import { MessageType, showMessage } from '@/app/util/Message';
 import ProductItem from './ProductItem';
-
-export class Product {
-  key?: number;
-  id?: number;
-  name?: string;
-  code?: string;
-  description?: string;
-  unitPrice?: number;
-  quantity?: number;
-  categoryId?: number;
-  images: string[] = [];
-}
-
-export interface Category {
-  id: number;
-  name: string;
-  code: string;
-}
+import { Category, Product } from '@/app/model/DashboardModel';
 
 const ProductDashboard: React.FC = () => {
 
@@ -88,7 +71,7 @@ const ProductDashboard: React.FC = () => {
       if (response.success) {
         const categoryListResponse: Category[] = response.data.categoryList
         setCategoryList(categoryListResponse)
-        setCategoryId(categoryListResponse[0].id)
+        setCategoryId(categoryListResponse[0].id!!)
       }
     })
   }, [])
