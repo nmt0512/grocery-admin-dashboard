@@ -4,8 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { Form, Input, Modal, Image, Upload, GetProp, UploadProps, UploadFile } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import { MessageType } from '@/app/util/Message';
-import { createCategory, updateCategory } from './api/route';
-import { Category } from '@/app/model/DashboardModel';
+import { Category } from '@/app/model/HomeModel';
 
 interface CategoryItemProps {
     isModalOpen: boolean,
@@ -51,7 +50,7 @@ const CategoryItem: React.FC<CategoryItemProps> = (
         }
     }, [isModalOpen, editingCategory]);
 
-    const onSaveCategory = () => {
+    const onSaveCategory = async () => {
         setIsLoading(true);
         const formData = new FormData();
         if (category.id === undefined) {
@@ -59,16 +58,14 @@ const CategoryItem: React.FC<CategoryItemProps> = (
                 formData.append('file', file.originFileObj as FileType);
             })
             formData.append('category', JSON.stringify(category));
-            createCategory(formData).then(response => {
-                if (response.success) {
-                    getCategoryList();
-                    showMessage(MessageType.SUCCESS, 'Đã lưu phân loại sản phẩm thành công');
-                    onCancelModal();
-                } else {
-                    console.log(response);
-                }
-                setIsLoading(false);
-            });
+            const response = await fetch('/api/category', { method: 'POST', body: formData })
+            if (response.ok) {
+                getCategoryList();
+                showMessage(MessageType.SUCCESS, 'Đã lưu phân loại sản phẩm thành công');
+                onCancelModal();
+            } else {
+                console.log(response);
+            }
         } else {
             category.imageUrl = undefined
             fileList.forEach(file => {
@@ -78,17 +75,16 @@ const CategoryItem: React.FC<CategoryItemProps> = (
                 }
             });
             formData.append('category', JSON.stringify(category));
-            updateCategory(formData).then(response => {
-                if (response.success) {
-                    getCategoryList();
-                    showMessage(MessageType.SUCCESS, 'Đã lưu phân loại sản phẩm thành công');
-                    onCancelModal();
-                } else {
-                    console.log(response);
-                }
-                setIsLoading(false);
-            });
+            const response = await fetch('/api/category', { method: 'POST', body: formData })
+            if (response.ok) {
+                getCategoryList();
+                showMessage(MessageType.SUCCESS, 'Đã lưu phân loại sản phẩm thành công');
+                onCancelModal();
+            } else {
+                console.log(response);
+            }
         }
+        setIsLoading(false);
     }
 
     const onCancelModal = () => {

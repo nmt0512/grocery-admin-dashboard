@@ -1,35 +1,44 @@
 'use client'
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Layout, Menu, Button } from 'antd';
 import { DashboardOutlined, ProductOutlined, BarChartOutlined, MenuUnfoldOutlined, MenuFoldOutlined } from '@ant-design/icons';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
+import Link from 'next/link';
 
 const { Header, Sider, Content } = Layout;
 
 const HomeLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [collapsed, setCollapsed] = useState(false);
-    const pathname = usePathname();
-    const router = useRouter();
+    const [selectedMenu, setSelectedMenu] = useState<string>('')
+    const pathname = usePathname()
+
+    useEffect(() => {
+        console.log(pathname)
+        setSelectedMenu(pathname !== '/home' ? pathname : '/home/dashboard')
+    }, [])
+
+    const onClickMenu = (menuInfo: any) => {
+        setSelectedMenu(menuInfo.key)
+    }
 
     return (
         <Layout style={{ height: '100vh' }}>
-            <Sider trigger={null} collapsible collapsed={collapsed}>
+            <Sider trigger={null} >
                 <div className="demo-logo-vertical" />
                 <div style={{ color: 'white', textAlign: 'center', padding: '25px 0', fontWeight: 'bold', fontSize: '16px' }}>
                     DASHBOARD
                 </div>
                 <Menu
-                    theme="dark"
                     mode="inline"
-                    selectedKeys={[pathname]}
-                    openKeys={['product-management']} // Ensure this submenu is always open
+                    theme='dark'
+                    selectedKeys={[selectedMenu]}
                     items={[
                         {
                             key: '/home/dashboard',
                             icon: <DashboardOutlined />,
-                            label: 'Dashboard',
-                            onClick: () => router.push('/home/dashboard'),
+                            label: <Link href="/home/dashboard">Dashboard</Link>,
+                            onClick: onClickMenu
                         },
                         {
                             key: 'product-management',
@@ -38,21 +47,21 @@ const HomeLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                             children: [
                                 {
                                     key: '/home/category',
-                                    label: 'Phân loại',
-                                    onClick: () => router.push('/home/category'),
+                                    label: <Link href="/home/category">Phân loại</Link>,
+                                    onClick: onClickMenu
                                 },
                                 {
                                     key: '/home/product',
-                                    label: 'Danh sách',
-                                    onClick: () => router.push('/home/product'),
+                                    label: <Link href="/home/product">Danh sách</Link>,
+                                    onClick: onClickMenu
                                 },
                             ],
                         },
                         {
                             key: '/home/statistic',
                             icon: <BarChartOutlined />,
-                            label: 'Thống kê doanh thu',
-                            onClick: () => router.push('/home/statistic'),
+                            label: <Link href="/home/statistic">Thống kê doanh thu</Link>,
+                            onClick: onClickMenu
                         },
                     ]}
                 />
@@ -73,7 +82,7 @@ const HomeLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                 <div
                     style={{
                         overflowY: 'auto',
-                        height: 'calc(100vh - 64px)', 
+                        height: 'calc(100vh - 64px)',
                     }}
                 >
                     <Content

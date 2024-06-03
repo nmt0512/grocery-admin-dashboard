@@ -3,11 +3,10 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Popconfirm, Select, Space, Table, message } from 'antd';
 import type { TableProps } from 'antd';
-import { deleteProductById, getAllCategory, getProductByCategoryId } from './api/route';
 import { DeleteOutlined, EditOutlined, QuestionCircleOutlined } from '@ant-design/icons';
 import { MessageType, showMessage } from '@/app/util/Message';
 import ProductItem from './ProductItem';
-import { Category, Product } from '@/app/model/DashboardModel';
+import { Category, Product } from '@/app/model/HomeModel';
 
 const ProductDashboard: React.FC = () => {
 
@@ -15,7 +14,7 @@ const ProductDashboard: React.FC = () => {
 
   const [productList, setProductList] = useState<Product[]>([]);
 
-  const [categoryId, setCategoryId] = useState<number>(0);
+  const [categoryId, setCategoryId] = useState<number>(1);
   const [categoryList, setCategoryList] = useState<Category[]>([]);
 
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false)
@@ -67,39 +66,46 @@ const ProductDashboard: React.FC = () => {
   ];
 
   useEffect(() => {
-    getAllCategory().then(response => {
-      if (response.success) {
-        const categoryListResponse: Category[] = response.data.categoryList
-        setCategoryList(categoryListResponse)
-        setCategoryId(categoryListResponse[0].id!!)
-      }
-    })
+    getAllCategory();
   }, [])
 
   useEffect(() => {
     getProductList()
   }, [categoryId])
 
-  const getProductList = () => getProductByCategoryId(categoryId).then(response => {
-    if (response.success) {
-      const productResponseList: Product[] = response.data.productResponseList
+  const getAllCategory = async () => {
+    const response = await fetch('/api/category', { method: 'GET' })
+    if (response.ok) {
+      const responseJson = await response.json();
+      const categoryListResponse: Category[] = responseJson.data.categoryList
+      setCategoryList(categoryListResponse)
+      setCategoryId(categoryListResponse[0].id!!)
+    }
+  }
+
+  const getProductList = async () => {
+    const response = await fetch(`/api/product?categoryId=${categoryId}`, { method: 'GET' })
+    if (response.ok) {
+      const responseJson = await response.json();
+      const productResponseList: Product[] = responseJson.data.productResponseList
       productResponseList.forEach(productResponse => productResponse.key = productResponse.id)
       setProductList(productResponseList)
     }
-  });
+  }
 
   const onSelectCategory = (value: number) => {
     setCategoryId(value);
   }
 
-  const onClickDeleteProduct = (id: number) => deleteProductById(id).then(response => {
-    if (response.success) {
+  const onClickDeleteProduct = async (id: number) => {
+    const response = await fetch(`/api/product?id=${id}`, { method: 'DELETE' })
+    if (response.ok) {
       getProductList();
       showMessage(messageApi, MessageType.SUCCESS, 'Đã xóa sản phẩm thành công');
     } else {
       showMessage(messageApi, MessageType.ERROR, 'Xóa sản phẩm thất bại');
     }
-  })
+  }
 
   const onClickAddProduct = () => {
     setIsModalOpen(true);
@@ -126,8 +132,8 @@ const ProductDashboard: React.FC = () => {
       isModalOpen={isModalOpen}
       editingProduct={editingProduct}
       onClickCloseModal={onClickCloseProductItem}
-      getProductList={getProductList} 
-      showMessage={showMessageFromModal}/>
+      getProductList={getProductList}
+      showMessage={showMessageFromModal} />
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
       <Select
         value={categoryId}

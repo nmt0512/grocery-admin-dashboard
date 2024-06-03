@@ -1,17 +1,16 @@
-'use server'
-
 import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
+import { BASE_URI } from "../ApiFetcher";
 
-const BASE_URI = 'http://localhost:8080'
+export async function POST(request: Request) {
 
-export async function login(request: any) {
+    const requestBody = await request.json()
+
     const response = await fetch(`${BASE_URI}/api/auth/adminLogin`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify(request)
+        body: JSON.stringify(requestBody) 
     });
 
     const loginResponse = await response.json();
@@ -20,9 +19,11 @@ export async function login(request: any) {
         cookies().set('token', loginResponse.data.accessToken, {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
-            maxAge: 60 * 60 * 24 * 7, // One week
+            maxAge: 60 * 60 * 5,
             path: '/',
         })
-        redirect('/dashboard');
     }
+
+    const data = loginResponse.data
+    return Response.json({ data })
 }

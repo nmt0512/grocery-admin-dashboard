@@ -3,8 +3,7 @@
 import { Column, Line } from "@ant-design/charts";
 import { Col, DatePicker, Divider, Row, Select } from "antd";
 import { useEffect, useState } from "react";
-import { getAllStatisticYear, getDailyStatisticByMonth, getMonthlyStatisticByYear, getYearlyStatistic } from "./api/route";
-import { Statistic } from "@/app/model/DashboardModel";
+import { Statistic } from "@/app/model/HomeModel";
 import dayjs, { Dayjs } from "dayjs";
 
 const StatisticDashboard = () => {
@@ -21,44 +20,55 @@ const StatisticDashboard = () => {
     }
 
     useEffect(() => {
-        getAllStatisticYear().then(response => {
-            if (response.success) {
-                const yearListResponse: number[] = response.data.yearList;
-                setYearList(yearListResponse);
-                setYear(yearListResponse[0]);
-            }
-        })
-        getYearlyStatistic().then(response => {
-            if (response.success) {
-                const statisticResponseList: Statistic[] = response.data.statisticResponseList;
-                const firstStatisticResponse = statisticResponseList[0];
-                const lastStatisticResponse = statisticResponseList[statisticResponseList.length - 1];
-
-                const statisticResponseData: Statistic[] = [
-                    {
-                        time: (Number(firstStatisticResponse.time) - 1).toString(),
-                        revenue: 0
-                    },
-                    ...statisticResponseList,
-                    {
-                        time: (Number(lastStatisticResponse.time) + 1).toString(),
-                        revenue: 0
-                    }
-                ]
-
-                setYearlyStatisticList(statisticResponseData);
-            }
-        })
-        setSelectedMonth(getCurrentMonthFormatted());
-    }, [])
+        getAllStatisticYear();
+        getYearlyStatistic();
+    }, []);
 
     useEffect(() => {
-        getMonthyStatisticByYearList();
+        getMonthlyStatisticByYear();
     }, [year])
 
     useEffect(() => {
-        getDailyStatisticByMonthList();
+        if (selectedMonth !== '') {
+            getDailyStatisticByMonth();
+        } else {
+            setSelectedMonth(getCurrentMonthFormatted());
+        }
     }, [selectedMonth])
+
+    const getAllStatisticYear = async () => {
+        const response = await fetch('/api/statistic/year', { method: 'GET' })
+        if (response.ok) {
+            const responseJson = await response.json();
+            const yearListResponse: number[] = responseJson.data.yearList;
+            setYearList(yearListResponse);
+            setYear(yearListResponse[0]);
+        }
+    }
+
+    const getYearlyStatistic = async () => {
+        const response = await fetch('/api/statistic/yearly', { method: 'GET' })
+        if (response.ok) {
+            const responseJson = await response.json();
+            const statisticResponseList: Statistic[] = responseJson.data.statisticResponseList;
+            const firstStatisticResponse = statisticResponseList[0];
+            const lastStatisticResponse = statisticResponseList[statisticResponseList.length - 1];
+
+            const statisticResponseData: Statistic[] = [
+                {
+                    time: (Number(firstStatisticResponse.time) - 1).toString(),
+                    revenue: 0
+                },
+                ...statisticResponseList,
+                {
+                    time: (Number(lastStatisticResponse.time) + 1).toString(),
+                    revenue: 0
+                }
+            ]
+
+            setYearlyStatisticList(statisticResponseData);
+        }
+    }
 
     const getCurrentMonthFormatted = (): string => {
         const now = new Date();
@@ -75,61 +85,60 @@ const StatisticDashboard = () => {
         return date.getDate();
     }
 
-    const getDailyStatisticByMonthList = () => {
-        getDailyStatisticByMonth(selectedMonth).then(response => {
-            if (response.success) {
-                const statisticResponseList: Statistic[] = response.data.statisticResponseList;
+    const getDailyStatisticByMonth = async () => {
+        const response = await fetch(`/api/statistic/daily?month=${selectedMonth}`, { method: 'GET' })
+        if (response.ok) {
+            const responseJson = await response.json();
+            const statisticResponseList: Statistic[] = responseJson.data.statisticResponseList;
 
-                const statisticResponseData: Statistic[] = [];
+            const statisticResponseData: Statistic[] = [];
 
-                const splitMonth = selectedMonth.split('-');
-                const numberOfDay = getNumberOfDayInMonth(
-                    Number(splitMonth[1]),
-                    Number(splitMonth[0])
-                )
+            const splitMonth = selectedMonth.split('-');
+            const numberOfDay = getNumberOfDayInMonth(
+                Number(splitMonth[1]),
+                Number(splitMonth[0])
+            )
 
-                for (let i = 1; i <= numberOfDay; i++) {
-                    const statistic: Statistic | undefined = statisticResponseList.find(statisticResponse => {
-                        return Number(statisticResponse.time) === i;
-                    })
-                    if (statistic === undefined) {
-                        statisticResponseData.push({
-                            time: i.toString(),
-                            revenue: 0
-                        });
-                    } else {
-                        statisticResponseData.push(statistic);
-                    }
+            for (let i = 1; i <= numberOfDay; i++) {
+                const statistic: Statistic | undefined = statisticResponseList.find(statisticResponse => {
+                    return Number(statisticResponse.time) === i;
+                })
+                if (statistic === undefined) {
+                    statisticResponseData.push({
+                        time: i.toString(),
+                        revenue: 0
+                    });
+                } else {
+                    statisticResponseData.push(statistic);
                 }
-                console.log(statisticResponseList);
-                setDailyStatisticList(statisticResponseData);
             }
-        })
+            setDailyStatisticList(statisticResponseData);
+        }
     }
 
-    const getMonthyStatisticByYearList = () => {
-        getMonthlyStatisticByYear(year).then(response => {
-            if (response.success) {
-                const statisticResponseList: Statistic[] = response.data.statisticResponseList;
+    const getMonthlyStatisticByYear = async () => {
+        const response = await fetch(`/api/statistic/monthly?year=${year}`, { method: 'GET' })
+        if (response.ok) {
+            const responseJson = await response.json();
+            const statisticResponseList: Statistic[] = responseJson.data.statisticResponseList;
 
-                const statisticResponseData: Statistic[] = [];
+            const statisticResponseData: Statistic[] = [];
 
-                for (let i = 1; i <= 12; i++) {
-                    const statistic: Statistic | undefined = statisticResponseList.find(statisticResponse => {
-                        return Number(statisticResponse.time) === i;
-                    })
-                    if (statistic === undefined) {
-                        statisticResponseData.push({
-                            time: i.toString(),
-                            revenue: 0
-                        });
-                    } else {
-                        statisticResponseData.push(statistic);
-                    }
+            for (let i = 1; i <= 12; i++) {
+                const statistic: Statistic | undefined = statisticResponseList.find(statisticResponse => {
+                    return Number(statisticResponse.time) === i;
+                })
+                if (statistic === undefined) {
+                    statisticResponseData.push({
+                        time: i.toString(),
+                        revenue: 0
+                    });
+                } else {
+                    statisticResponseData.push(statistic);
                 }
-                setMonthlyStatisticList(statisticResponseData);
             }
-        })
+            setMonthlyStatisticList(statisticResponseData);
+        }
     }
 
     const onSelectMonth = (_: Dayjs, dateString: string | string[]) => {

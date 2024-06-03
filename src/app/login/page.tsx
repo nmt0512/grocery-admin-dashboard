@@ -2,14 +2,25 @@
 
 import { Avatar, Form, Input, Button, Typography } from "antd";
 import { UserOutlined, LockOutlined } from "@ant-design/icons";
-import { login } from "./api/route";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 const { Title } = Typography;
 
 const Login: React.FC = () => {
 
-    const onLogin = (value: any) => {
-        login(value);
+    const [loading, setLoading] = useState<boolean>(false)
+    const router = useRouter()
+
+    const onLogin = async (value: any) => {
+        setLoading(true)
+        const response = await fetch('/api/login', { method: 'POST', body: JSON.stringify(value) })
+        if (response.ok) {
+            router.push('/home/dashboard');
+        } else {
+            console.log(response);
+        }
+        setLoading(false)
     }
 
     return (
@@ -56,7 +67,7 @@ const Login: React.FC = () => {
                         />
                     </Form.Item>
                     <Form.Item>
-                        <Button type="primary" htmlType="submit" block>
+                        <Button loading={loading} type="primary" htmlType="submit" block>
                             Đăng nhập
                         </Button>
                     </Form.Item>

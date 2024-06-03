@@ -3,7 +3,6 @@
 import { AppstoreOutlined, DatabaseOutlined } from "@ant-design/icons";
 import { Card, Col, Row, Statistic } from "antd";
 import { useEffect, useState } from "react";
-import { getNumberOfCategory, getNumberOfProduct } from "./api/route";
 
 const Dashboard = () => {
 
@@ -11,19 +10,27 @@ const Dashboard = () => {
     const [numberOfProduct, setNumberOfProduct] = useState<number>(0);
 
     useEffect(() => {
-        getNumberOfCategory().then(response => {
-            if (response.success) {
-                const numberOfCategoryResponse: number = response.data.numberOfCategory;
-                setNumberOfCategory(numberOfCategoryResponse);
-            }
-        })
-        getNumberOfProduct().then(response => {
-            if (response.success) {
-                const numberOfProductResponse: number = response.data.numberOfProduct;
-                setNumberOfProduct(numberOfProductResponse);
-            }
-        })
+        getNumberOfCategory();
+        getNumberOfProduct();
     }, [])
+
+    const getNumberOfCategory = async () => {
+        const response = await fetch(`/api/category/numberOfCategory`, { method: 'GET' })
+        if (response.ok) {
+            const responseJson = await response.json();
+            const numberOfCategoryResponse: number = responseJson.data.numberOfCategory;
+            setNumberOfCategory(numberOfCategoryResponse);
+        }
+    }
+
+    const getNumberOfProduct = async () => {
+        const response = await fetch(`/api/product/numberOfProduct`, { method: 'GET' })
+        if (response.ok) {
+            const responseJson = await response.json();
+            const numberOfProductResponse: number = responseJson.data.numberOfProduct;
+            setNumberOfProduct(numberOfProductResponse);
+        }
+    }
 
     return <Row gutter={16}>
         <Col span={12}>

@@ -4,11 +4,9 @@ import React, { useEffect, useState } from 'react';
 import { Button, Popconfirm, Space, Table, message } from 'antd';
 import { TableProps, Image } from 'antd';
 import { MessageType, showMessage } from '@/app/util/Message';
-import { getAllCategory } from '../product/api/route';
 import CategoryItem from './CategoryItem';
 import { DeleteOutlined, EditOutlined, QuestionCircleOutlined } from '@ant-design/icons';
-import { deleteCategoryById } from './api/route';
-import { Category } from '@/app/model/DashboardModel';
+import { Category } from '@/app/model/HomeModel';
 
 const CategoryDashboard: React.FC = () => {
 
@@ -65,23 +63,25 @@ const CategoryDashboard: React.FC = () => {
         getCategoryList();
     }, [])
 
-    const getCategoryList = () => {
-        getAllCategory().then(response => {
-            if (response.success) {
-                const categoryListResponse: Category[] = response.data.categoryList
-                setCategoryList(categoryListResponse)
-            }
-        })
+    const getCategoryList = async () => {
+        const response = await fetch('/api/category', { method: 'GET' })
+        if (response.ok) {
+            const responseJson = await response.json();
+            const categoryResponseList: Category[] = responseJson.data.categoryList;
+            categoryResponseList.forEach(categoryResponse => categoryResponse.key = categoryResponse.id)
+            setCategoryList(categoryResponseList);
+        }
     }
 
-    const onClickDeleteCategory = (id: number) => deleteCategoryById(id).then(response => {
-        if (response.success) {
+    const onClickDeleteCategory = async (id: number) => {
+        const response = await fetch(`/api/category?id=${id}`, { method: 'DELETE' })
+        if (response.ok) {
             getCategoryList();
             showMessage(messageApi, MessageType.SUCCESS, 'Đã xóa phân loại sản phẩm thành công');
         } else {
             showMessage(messageApi, MessageType.ERROR, 'Xóa phân loại sản phẩm thất bại');
         }
-    })
+    }
 
     const onClickAddCategory = () => {
         setIsModalOpen(true);
