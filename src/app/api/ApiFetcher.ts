@@ -17,16 +17,34 @@ export const HttpMethod = Object.freeze({
 
 export const doFetch = async (apiRequest: ApiRequest) => {
     const token = cookies().get('token')?.value
-
-    const response = await fetch(
-        `${BASE_URI}${apiRequest.uri}`,
-        {
-            method: apiRequest.httpMethod,
-            body: apiRequest.body,
-            headers: {
-                'Authorization': `Bearer ${token}`,
+    console.log(`REQUEST to Uri [${apiRequest.uri}] with Body [${JSON.stringify(apiRequest.body)}]`)
+    const response = apiRequest.body instanceof FormData
+        ?
+        await fetch(
+            `${BASE_URI}${apiRequest.uri}`,
+            {
+                method: apiRequest.httpMethod,
+                body: apiRequest.body,
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                }
             }
-        }
-    )
-    return await response.json();
+        )
+        :
+        await fetch(
+            `${BASE_URI}${apiRequest.uri}`,
+            {
+                method: apiRequest.httpMethod,
+                body: JSON.stringify(apiRequest.body),
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': `application/json`
+                }
+            }
+        )
+    const data = (await response.json()).data;
+    if (response.ok) {
+        return Response.json({ data });
+    }
+    return Response.json({ error: 'Internal Server Error' }, { status: 500 });
 }

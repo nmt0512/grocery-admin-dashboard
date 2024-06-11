@@ -1,3 +1,4 @@
+import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
@@ -6,14 +7,14 @@ export function middleware(request: NextRequest) {
 
   const requestUrlPath = request.nextUrl.pathname;
 
-  if (requestUrlPath.startsWith('/home') && !request.cookies.has('token')) {
+  if (requestUrlPath.startsWith('/home') && !cookies().has('token')) {
     return NextResponse.redirect(new URL('/login', request.url));
   }
-  else if (requestUrlPath === '/login' && request.cookies.has('token')) {
+  else if (requestUrlPath === '/login' && cookies().has('token')) {
     return NextResponse.redirect(new URL('/home', request.url));
   }
   else if (requestUrlPath === '/') {
-    if (request.cookies.has('token')) {
+    if (cookies().has('token')) {
       return NextResponse.redirect(new URL('/home', request.url));
     } else {
       return NextResponse.redirect(new URL('/login', request.url));
