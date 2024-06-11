@@ -52,40 +52,46 @@ const CategoryItem: React.FC<CategoryItemProps> = (
 
     const onSaveCategory = async () => {
         setIsLoading(true);
-        const formData = new FormData();
-        if (category.id === undefined) {
-            fileList.forEach(file => {
-                formData.append('file', file.originFileObj as FileType);
-            })
-            formData.append('category', JSON.stringify(category));
-            const response = await fetch('/api/category', { method: 'POST', body: formData })
-            if (response.ok) {
-                getCategoryList();
-                showMessage(MessageType.SUCCESS, 'Đã lưu phân loại sản phẩm thành công');
-                onCancelModal();
+        if (isNotEmpty(category.name) && isNotEmpty(category.code) && fileList.length > 0) {
+            const formData = new FormData();
+            if (category.id === undefined) {
+                fileList.forEach(file => {
+                    formData.append('file', file.originFileObj as FileType);
+                })
+                formData.append('category', JSON.stringify(category));
+                const response = await fetch('/api/category', { method: 'POST', body: formData })
+                if (response.ok) {
+                    getCategoryList();
+                    showMessage(MessageType.SUCCESS, 'Đã lưu phân loại sản phẩm thành công');
+                    onCancelModal();
+                } else {
+                    showMessage(MessageType.ERROR, 'Có lỗi xảy ra khi lưu phân loại sản phẩm');
+                }
             } else {
-                console.log(response);
+                fileList.forEach(file => {
+                    if (file.url === undefined) {
+                        formData.append('file', file.originFileObj as FileType);
+                        category.imageUrl = undefined
+                    }
+                });
+                formData.append('category', JSON.stringify(category));
+                const response = await fetch('/api/category', { method: 'PUT', body: formData })
+                if (response.ok) {
+                    getCategoryList();
+                    showMessage(MessageType.SUCCESS, 'Đã lưu phân loại sản phẩm thành công');
+                    onCancelModal();
+                } else {
+                    showMessage(MessageType.ERROR, 'Có lỗi xảy ra khi lưu phân loại sản phẩm');
+                }
             }
         } else {
-            category.imageUrl = undefined
-            fileList.forEach(file => {
-                if (file.url === undefined) {
-                    formData.append('file', file.originFileObj as FileType);
-                    category.imageUrl = undefined
-                }
-            });
-            formData.append('category', JSON.stringify(category));
-            const response = await fetch('/api/category', { method: 'POST', body: formData })
-            if (response.ok) {
-                getCategoryList();
-                showMessage(MessageType.SUCCESS, 'Đã lưu phân loại sản phẩm thành công');
-                onCancelModal();
-            } else {
-                console.log(response);
-            }
+            showMessage(MessageType.ERROR, 'Bạn cần điền đầy đủ thông tin và hình ảnh trong Form');
         }
+
         setIsLoading(false);
     }
+
+    const isNotEmpty = (value: string | undefined) => value !== undefined && value.trim().length > 0
 
     const onCancelModal = () => {
         onClickCloseModal();

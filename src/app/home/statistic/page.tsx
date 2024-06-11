@@ -187,7 +187,6 @@ const StatisticDashboard = () => {
                         <div style={{ marginBottom: 40, marginTop: 20 }}>
                             <Select
                                 value={year}
-                                style={{ width: 120 }}
                                 onSelect={onSelectYear}
                                 options={yearList.map(year => ({
                                     value: year,

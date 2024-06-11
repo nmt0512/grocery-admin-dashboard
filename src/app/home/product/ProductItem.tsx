@@ -59,41 +59,53 @@ const ProductItem: React.FC<ProductItemProps> = (
 
     const onSaveProduct = async () => {
         setIsLoading(true);
-        const formData = new FormData();
-        if (product.id === undefined) {
-            fileList.forEach(file => {
-                formData.append('files', file.originFileObj as FileType);
-            })
-            formData.append('product', JSON.stringify(product));
-            const response = await fetch(`/api/product`, { method: 'POST', body: formData })
-            if (response.ok) {
-                getProductList();
-                showMessage(MessageType.SUCCESS, 'Đã lưu sản phẩm thành công');
-                onCancelModal();
+        if (isNotEmpty(product.name)
+            && isNotEmpty(product.code)
+            && product.unitPrice !== undefined
+            && product.unitPrice > 0
+            && product.quantity !== undefined
+            && product.quantity > 0) {
+            const formData = new FormData();
+            if (product.id === undefined) {
+                fileList.forEach(file => {
+                    formData.append('files', file.originFileObj as FileType);
+                })
+                formData.append('product', JSON.stringify(product));
+                const response = await fetch(`/api/product`, { method: 'POST', body: formData })
+                if (response.ok) {
+                    getProductList();
+                    showMessage(MessageType.SUCCESS, 'Đã lưu sản phẩm thành công');
+                    onCancelModal();
+                } else {
+                    showMessage(MessageType.ERROR, 'Có lỗi xảy ra khi lưu sản phẩm');
+                }
             } else {
-                console.log(response);
+                product.images = [];
+                fileList.forEach(file => {
+                    if (file.url === undefined) {
+                        formData.append('files', file.originFileObj as FileType);
+                    } else {
+                        product.images.push(file.url);
+                    }
+                });
+                formData.append('product', JSON.stringify(product));
+                const response = await fetch(`/api/product`, { method: 'PUT', body: formData })
+                if (response.ok) {
+                    getProductList();
+                    showMessage(MessageType.SUCCESS, 'Đã lưu sản phẩm thành công');
+                    onCancelModal();
+                } else {
+                    showMessage(MessageType.ERROR, 'Có lỗi xảy ra khi lưu sản phẩm');
+                }
             }
         } else {
-            product.images = [];
-            fileList.forEach(file => {
-                if (file.url === undefined) {
-                    formData.append('files', file.originFileObj as FileType);
-                } else {
-                    product.images.push(file.url);
-                }
-            });
-            formData.append('product', JSON.stringify(product));
-            const response = await fetch(`/api/product`, { method: 'PUT', body: formData })
-            if (response.ok) {
-                getProductList();
-                showMessage(MessageType.SUCCESS, 'Đã lưu sản phẩm thành công');
-                onCancelModal();
-            } else {
-                console.log(response);
-            }
+            showMessage(MessageType.ERROR, 'Bạn cần điền thông tin đầy đủ và hợp lệ vào Form');
         }
+
         setIsLoading(false);
     }
+
+    const isNotEmpty = (value: string | undefined) => value !== undefined && value.trim().length > 0
 
     const onCancelModal = () => {
         onClickCloseModal();
@@ -165,7 +177,6 @@ const ProductItem: React.FC<ProductItemProps> = (
                 <Form.Item label="Phân loại">
                     <Select
                         value={product.categoryId}
-                        style={{ width: 120 }}
                         onSelect={(value) => {
                             setProduct(prevProduct => ({
                                 ...prevProduct,

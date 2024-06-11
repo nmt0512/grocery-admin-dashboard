@@ -1,17 +1,20 @@
 'use client'
 
 import React, { useEffect, useState } from 'react';
-import { Layout, Menu, Button } from 'antd';
-import { DashboardOutlined, ProductOutlined, BarChartOutlined, MenuUnfoldOutlined, MenuFoldOutlined } from '@ant-design/icons';
-import { usePathname } from 'next/navigation';
+import { Button, Layout, Menu } from 'antd';
+import { DashboardOutlined, ProductOutlined, BarChartOutlined, LogoutOutlined, UserOutlined } from '@ant-design/icons';
+import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 const { Header, Sider, Content } = Layout;
 
 const HomeLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const [collapsed, setCollapsed] = useState(false);
+
+    const [loadingLogout, setLoadingLogout] = useState<boolean>()
     const [selectedMenu, setSelectedMenu] = useState<string>('')
+    const [selectedHeader, setSelectedHeader] = useState<string>('')
     const pathname = usePathname()
+    const router = useRouter()
 
     useEffect(() => {
         console.log(pathname)
@@ -20,9 +23,29 @@ const HomeLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
     const onClickMenu = (menuInfo: any) => {
         setSelectedMenu(menuInfo.key)
+        let header: string
+        if (menuInfo.key === '/home/category') {
+            header = 'Danh sách phân loại'
+        } else if (menuInfo.key === '/home/product') {
+            header = 'Danh sách sản phẩm'
+        } else if (menuInfo.key === '/home/account') {
+            header = 'Danh sách tài khoản'
+        } else if (menuInfo.key === '/home/statistic') {
+            header = 'Thống kê doanh thu'
+        } else {
+            header = ''
+        }
+        setSelectedHeader(header)
     }
 
-    return (
+    const onClickLogout = async () => {
+        setLoadingLogout(true)
+        await fetch('/api/logout', { method: 'POST' })
+        router.push('/login')
+        setLoadingLogout(false)
+    }
+
+    return <>
         <Layout style={{ height: '100vh' }}>
             <Sider trigger={null} >
                 <div className="demo-logo-vertical" />
@@ -58,26 +81,31 @@ const HomeLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                             ],
                         },
                         {
+                            key: '/home/account',
+                            icon: <UserOutlined />,
+                            label: <Link href="/home/account">Tài khoản</Link>,
+                            onClick: onClickMenu
+                        },
+                        {
                             key: '/home/statistic',
                             icon: <BarChartOutlined />,
                             label: <Link href="/home/statistic">Thống kê doanh thu</Link>,
                             onClick: onClickMenu
                         },
+                        {
+                            key: 'logout',
+                            label: <Button type="link" icon={<LogoutOutlined />} loading={loadingLogout}>
+                                Đăng xuất
+                            </Button>,
+                            style: { position: 'absolute', bottom: 10, },
+                            onClick: onClickLogout
+                        },
                     ]}
                 />
             </Sider>
             <Layout>
-                <Header style={{ padding: 0, background: '#fff' }}>
-                    <Button
-                        type="text"
-                        icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-                        onClick={() => setCollapsed(!collapsed)}
-                        style={{
-                            fontSize: '16px',
-                            width: 64,
-                            height: 64,
-                        }}
-                    />
+                <Header style={{ padding: 0, background: '#fff', fontWeight: 'bold', textAlign: 'center', fontSize: 16 }}>
+                    {selectedHeader}
                 </Header>
                 <div
                     style={{
@@ -97,7 +125,8 @@ const HomeLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                 </div>
             </Layout>
         </Layout>
-    );
+    </>
+
 }
 
 export default HomeLayout;

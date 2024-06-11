@@ -136,8 +136,8 @@ const ProductDashboard: React.FC = () => {
       showMessage={showMessageFromModal} />
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
       <Select
+        style={{ width: '150px' }}
         value={categoryId}
-        style={{ width: 120 }}
         onSelect={onSelectCategory}
         options={categoryList.map(category => ({
           value: category.id,

@@ -23,3 +23,19 @@ export class Statistic {
     revenue?: number;
 }
 
+export class User {
+    key?: string;
+    id?: string;
+    username?: string;
+    password?: string;
+    email?: string;
+    firstName?: string;
+    lastName?: string;
+    role?: string;
+}
+
+export enum UserRoles {
+    CUSTOMER = 'CUSTOMER',
+    STAFF = 'STAFF'
+}
+

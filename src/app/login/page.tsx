@@ -1,14 +1,16 @@
 'use client'
 
-import { Avatar, Form, Input, Button, Typography } from "antd";
+import { Avatar, Form, Input, Button, Typography, message } from "antd";
 import { UserOutlined, LockOutlined } from "@ant-design/icons";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { MessageType, showMessage } from "../util/Message";
 
 const { Title } = Typography;
 
 const Login: React.FC = () => {
 
+    const [messageApi, contextHolder] = message.useMessage();
     const [loading, setLoading] = useState<boolean>(false)
     const router = useRouter()
 
@@ -18,12 +20,12 @@ const Login: React.FC = () => {
         if (response.ok) {
             router.push('/home/dashboard');
         } else {
-            console.log(response);
+            showMessage(messageApi, MessageType.ERROR, 'Tên tài khoản hoặc mật khẩu không đúng');
         }
         setLoading(false)
     }
 
-    return (
+    return <>
         <div className="Login"
             style={{
                 display: "flex",
@@ -33,6 +35,7 @@ const Login: React.FC = () => {
                 backgroundColor: "white"
             }}
         >
+            {contextHolder}
             <div style={{ maxWidth: 300 }}>
                 <div style={{ position: 'relative', textAlign: 'center', marginBottom: 25 }}>
                     <Avatar
@@ -74,7 +77,7 @@ const Login: React.FC = () => {
                 </Form>
             </div>
         </div>
-    )
+    </>
 }
 
 export default Login;
