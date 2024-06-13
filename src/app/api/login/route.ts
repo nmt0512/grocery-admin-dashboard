@@ -17,7 +17,7 @@ export async function POST(request: Request) {
 
     if (loginResponse.success) {
         cookies().set('token', loginResponse.data.accessToken, {
-            maxAge: 60 * 60 * 5,
+            maxAge: 60 * 60 * 12,
         })
         const data = loginResponse.data
         return Response.json({ data })
